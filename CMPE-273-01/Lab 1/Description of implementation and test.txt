@@ -1,3 +1,4 @@
 OS platform: Windows 10
-phython version: 3.6
-test description: I started up an Apache Tomcat application server and ran a sample application on it. Then I used ApacheBench to generate 10 connections and 1000 request at the same time to visit the homepage of the application. Next, I executed my socket-mon.py to get the report of monitor data.
+Python version: 3.6
+Test description: I started up an Apache Tomcat application server and ran a sample application on it. Then I used ApacheBench to generate 10 connections and 1000 request at the same time to visit the homepage of the application. 
+Next, I executed my socket-mon.py to get the report of monitor data.
