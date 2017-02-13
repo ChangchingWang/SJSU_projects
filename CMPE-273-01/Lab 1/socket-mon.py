@@ -1,6 +1,6 @@
 import psutil
 
-############ funcitons ##############
+############ functions ##############
 
 def transformData(list):
 	newList = [];
