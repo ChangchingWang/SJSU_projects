@@ -1,0 +1,1 @@
+Each of these files is AWS lambda function.
