@@ -28,4 +28,4 @@ def lambda_handler(event, context):
         item = response['Item']
         print("GetItem succeeded:")
         print(json.dumps(item, indent=4, cls=DecimalEncoder))
-        return json.dumps(item, indent=4, cls=DecimalEncoder)
+        return item

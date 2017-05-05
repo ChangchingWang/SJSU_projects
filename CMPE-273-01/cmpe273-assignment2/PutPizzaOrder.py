@@ -19,7 +19,19 @@ def lambda_handler(event, context):
     table = dynamodb.Table('pizza_order')
     
     response = table.put_item(
-        Item=event
+        Item={
+            "order_id" : event['order_id'],
+            "menu_id" : event['menu_id'],
+            "customer_name" : event['customer_name'],
+            "customer_email" : event['customer_email'],
+            "order_status" : "processing",
+            "order_detail" : {
+                "selection" : "none",
+                "size" : "none",
+                "costs" : "none",
+                "order_time" : "none"
+            }
+        }
     )
 
     print("PutItem succeeded:")

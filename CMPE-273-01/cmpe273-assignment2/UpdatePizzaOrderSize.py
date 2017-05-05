@@ -2,6 +2,8 @@ import boto3
 import json
 import decimal
 import collections
+from datetime import datetime
+from time import strftime
 
 # Helper class to convert a DynamoDB item to JSON.
 class DecimalEncoder(json.JSONEncoder):
@@ -13,49 +15,59 @@ class DecimalEncoder(json.JSONEncoder):
                 return int(o)
         return super(DecimalEncoder, self).default(o)
 
-def callLambda(functionName, parameters):
-    lambda_client = boto3.client('lambda')
 
-    responseData = None
+def query_item(table_name, key_name, key_value):
+    dynamodb = boto3.resource('dynamodb')
+    table = dynamodb.Table(table_name) 
     try:
-        response = lambda_client.invoke(
-            FunctionName=functionName, 
-            InvocationType='RequestResponse',
-            Payload=json.dumps(parameters))
-        responseData = response['Payload'].read()
-    except Exception as e:
-        print(e)
+        response = table.get_item(
+            Key={key_name: key_value}
+        )
+    except ClientError as e:
+        print(e.response['Error']['Message'])
     else:
-        print("call " + functionName + "() succeeded:")
-        #print(responseData)
-        return responseData
+        item = response['Item']
+        print(table_name + " GetItem succeeded:")
+        #print(json.dumps(item, indent=4, cls=DecimalEncoder))
+        return item
+
+def update_order(order_id, size, costs, order_time):
+    dynamodb = boto3.resource('dynamodb')
+    table = dynamodb.Table('pizza_order')
+
+    response = table.update_item(
+        Key={'order_id': order_id},
+        UpdateExpression="set order_detail.size = :s, order_detail.costs = :c, order_detail.order_time = :o",
+        ExpressionAttributeValues={
+            ':s': size,
+            ':c': costs,
+            ':o': order_time
+        },
+        ReturnValues="UPDATED_NEW"
+    )
+
+    print("update pizza_order succeeded:")
+    print(json.dumps(response, indent=4, cls=DecimalEncoder))
+    return 'Done'
 
 def lambda_handler(event, context):
     
     # query menu_id of this order
-    orderJsonStr = callLambda('GetPizzaOrder', {"order_id":event["order_id"]})
-    #orderJsonUnicode = json.loads(orderJsonStr)
-    orderDic =  json.loads(orderJsonStr)
+    order = query_item('pizza_order', 'order_id', event["order_id"])
     
     # query size name of size number
-    sizeJsonStr = callLambda('GetPizzaMenuSize', {"menu_id": orderDic["menu_id"]})
-    sizeDic = json.loads(sizeJsonStr)
+    menu = query_item('pizza_menu', 'menu_id', order["menu_id"])
+    sizeDic = {}
+    for idx, val in enumerate(menu["size"]):
+        sizeDic[str(idx+1)] = val
+    
     size = sizeDic[event["input"]] # 1. Slide, 2. Small, 3. Medium, 4. Large, 5. X-Large
     
     # query price
-    priceJson = callLambda('GetPizzaMenuPriceBySize', {"menu_id": orderDic["menu_id"], "size": size})
-    price = json.loads(priceJson)
+    price = menu["size_price"][size]
     
     # update pizza_order, add size and price
-    updateParams = {
-        "order_id" : event["order_id"],
-        "update_key1" : "size",
-        "update_value1" : size,
-        "update_key2" : "price",
-        "update_value2" : price
-    }
-    updateResult = callLambda('UpdatePizzaOrder2', updateParams)
-    print "add size and price:" + updateResult
+    update_order(event["order_id"], size, price, datetime.now().strftime("%m-%d-%Y@%H:%M:%S"))
     
     returnMsg = {
         "Message" : "Your order costs $" + price + ". We will email you when the order is ready. Thank you!"

@@ -29,7 +29,7 @@ def lambda_handler(event, context):
     
     response = table.update_item(
         Key={'order_id': event["order_id"]},
-        UpdateExpression="set " + event["update_key"] + "=:v",
+        UpdateExpression="set order_detail." + event["update_key"] + "=:v",
         ExpressionAttributeValues={
             ':v': event['update_value']
         },

@@ -51,4 +51,4 @@ def lambda_handler(event, context):
     msgDic = {
         "Message" : "Hi " + event["customer_name"] + ", please choose one of these selection: " + responseMsg
     }
-    return json.dumps(msgDic)
+    return msgDic

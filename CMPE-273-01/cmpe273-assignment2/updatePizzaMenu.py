@@ -19,7 +19,7 @@ def lambda_handler(event, context):
     table = dynamodb.Table('pizza_menu')
     
     response = table.update_item(
-        Key={'menu_id':'menu005'},
+        Key={'menu_id':event['menu_id']},
         UpdateExpression="set selection=:s",
         ExpressionAttributeValues={
             ':s': event['selection']
@@ -27,6 +27,6 @@ def lambda_handler(event, context):
         ReturnValues="UPDATED_NEW"
     )
 
-    print("PutItem succeeded:")
+    print("update_item succeeded:")
     print(json.dumps(response, indent=4, cls=DecimalEncoder))
     return 'Done'
